@@ -146,8 +146,10 @@ presets) — this default is easy to change and is an open point for spec review
 
 ### 5.7 Benchmark interface
 
-- `Benchmark.query(genome, dataset) -> {accuracy, params, flops, conv_count}`,
-  with an in-memory cache.
+- `Benchmark.query(genome, dataset) -> {val_accuracy, test_accuracy, params,
+  flops, conv_count}`, with an in-memory cache. Search uses **validation**
+  accuracy as fitness; **test** accuracy is used only for final reporting (see
+  §6) so we never select on the test set.
 - Data source: prefer a **precomputed CSV** of accuracies/params/FLOPs (light,
   no PyTorch, no 2 GB download); fall back to the official NAS-Bench-201 /
   NATS-Bench API. Wrapped behind an interface so a tiny deterministic **fake**
@@ -155,6 +157,9 @@ presets) — this default is easy to change and is an open point for spec review
 
 ## 6. Experiments & metrics
 
+- **Protocol:** fitness during search = **validation** accuracy; all reported
+  numbers (frontier, headline results) = **test** accuracy, so the search never
+  selects on the test set.
 - **Comparison:** MAP-Elites vs random search, identical budget (3,000),
   20–50 seeds each, CIFAR-10.
 - **Metrics over evaluations:** best-so-far accuracy; coverage; qd_score.
