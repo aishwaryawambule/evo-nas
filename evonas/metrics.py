@@ -9,7 +9,7 @@ def metrics_snapshot(archive, eval_index, best_val, n_reachable):
 def evaluate(archive, gt_archive, n_reachable):
     gt_qd = gt_archive.qd_score()
     return {
-        "coverage_ratio": len(archive.cells) / n_reachable,
+        "coverage_ratio": archive.coverage(n_reachable),
         "qd_ratio": (archive.qd_score() / gt_qd) if gt_qd else 0.0,
     }
 
@@ -20,4 +20,7 @@ def pareto_front(records):
         if r["test_accuracy"] > best:
             front.append(r)
             best = r["test_accuracy"]
+        elif (r["test_accuracy"] == best and front
+              and r["params"] == front[-1]["params"]):
+            front.append(r)
     return front

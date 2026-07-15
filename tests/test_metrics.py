@@ -32,3 +32,19 @@ def test_pareto_front_keeps_only_nondominated():
     ]
     front = pareto_front(records)
     assert {(r["params"], r["test_accuracy"]) for r in front} == {(0.2, 0.80), (0.6, 0.90)}
+
+def test_pareto_front_keeps_exact_duplicate_coordinates():
+    records = [
+        {"params": 0.2, "test_accuracy": 0.80},
+        {"params": 0.6, "test_accuracy": 0.90, "id": "a"},
+        {"params": 0.6, "test_accuracy": 0.90, "id": "b"},
+    ]
+    assert len(pareto_front(records)) == 3
+
+def test_pareto_front_drops_dominated_accuracy_tie():
+    records = [
+        {"params": 0.2, "test_accuracy": 0.90},
+        {"params": 0.6, "test_accuracy": 0.90},  # bigger params, same acc => dominated
+    ]
+    front = pareto_front(records)
+    assert len(front) == 1 and front[0]["params"] == 0.2
