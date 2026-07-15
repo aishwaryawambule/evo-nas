@@ -1,0 +1,6 @@
+dataset: fake
+budget: 3000
+map:
+  x_bins: 20
+init_random: 50
+seeds: [0, 1, 2, 3, 4]
