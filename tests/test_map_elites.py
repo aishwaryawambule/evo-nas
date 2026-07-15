@@ -14,6 +14,11 @@ def test_history_length_equals_budget():
                             init_random=20, rng=np.random.default_rng(0), n_reachable=140)
     assert len(history) == 200
 
+def test_history_logs_at_least_one_insert():
+    _, history = map_elites(FakeBenchmark(), make_factory(), budget=200,
+                            init_random=20, rng=np.random.default_rng(0), n_reachable=140)
+    assert any(h["insert"] is not None for h in history)
+
 def test_best_val_is_monotonic_nondecreasing():
     _, history = map_elites(FakeBenchmark(), make_factory(), budget=300,
                             init_random=20, rng=np.random.default_rng(1), n_reachable=140)

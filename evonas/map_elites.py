@@ -9,9 +9,12 @@ def _search(benchmark, make_archive, budget, rng, n_reachable, candidate):
     for evals in range(1, budget + 1):
         g = candidate(archive, evals, rng)
         rec = benchmark.query(g)
-        archive.insert(g, rec)
+        inserted = archive.insert(g, rec)
         best = max(best, rec["val_accuracy"])
-        history.append(metrics_snapshot(archive, evals, best, n_reachable))
+        snap = metrics_snapshot(archive, evals, best, n_reachable)
+        snap["insert"] = {"cell": list(archive.cell_index(rec["params"], rec["conv_count"])),
+                          "val_accuracy": rec["val_accuracy"], "genome": list(g)} if inserted else None
+        history.append(snap)
     return archive, history
 
 def map_elites(benchmark, make_archive, budget, init_random, rng, n_reachable):
