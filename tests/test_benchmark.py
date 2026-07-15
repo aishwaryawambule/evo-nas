@@ -26,3 +26,9 @@ def test_accuracy_in_valid_range_and_test_below_val():
 
 def test_conv_count_matches_genome():
     assert FakeBenchmark().query((2, 3, 0, 0, 0, 0))["conv_count"] == 2
+
+def test_query_result_is_not_mutable_via_cache():
+    b = FakeBenchmark()
+    first = b.query((1, 2, 3, 4, 0, 1))
+    first["val_accuracy"] = 999.0
+    assert b.query((1, 2, 3, 4, 0, 1))["val_accuracy"] != 999.0

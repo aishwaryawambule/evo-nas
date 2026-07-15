@@ -17,7 +17,7 @@ class FakeBenchmark:
 
     def query(self, g):
         if g in self._cache:
-            return self._cache[g]
+            return dict(self._cache[g])
         cc = conv_count(g)
         n_none = sum(1 for op in g if op == 0)
         params = round(sum(self.OP_PARAMS[op] for op in g), 6)
@@ -33,4 +33,4 @@ class FakeBenchmark:
             "conv_count": cc,
         }
         self._cache[g] = rec
-        return rec
+        return dict(rec)
