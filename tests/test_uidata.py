@@ -1,4 +1,10 @@
-from evonas.uidata import replay_archive
+import matplotlib
+matplotlib.use("Agg")
+from matplotlib.figure import Figure
+
+from evonas.benchmark import FakeBenchmark
+from evonas.experiment import run_experiment, to_json, from_json
+from evonas.uidata import replay_archive, comparison_figures
 
 def test_replay_keeps_best_per_cell_up_to_step():
     history = [
@@ -12,3 +18,16 @@ def test_replay_keeps_best_per_cell_up_to_step():
     at4 = replay_archive(history, up_to=4)
     assert at4[(0, 0)]["val_accuracy"] == 0.9   # replaced by the better one
     assert (1, 0) in at4
+
+def test_comparison_figures_from_round_tripped_results():
+    config = {
+        "dataset": "fake",
+        "budget": 30,
+        "map": {"x_bins": 20},
+        "init_random": 10,
+        "seeds": [0, 1],
+    }
+    results = from_json(to_json(run_experiment(config, FakeBenchmark())))
+    figs = comparison_figures(results)
+    assert set(figs) == {"qd", "coverage", "frontier"}
+    assert all(isinstance(f, Figure) for f in figs.values())

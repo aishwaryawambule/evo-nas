@@ -1,7 +1,8 @@
 import numpy as np
 import streamlit as st
-from evonas.uidata import load_results, replay_archive
+from evonas.uidata import load_results, replay_archive, comparison_figures
 from evonas.select import select_design
+from evonas.archive import CONV_Y_EDGES
 
 st.title("QD-NAS: MAP-Elites over NAS-Bench-201")
 
@@ -25,8 +26,17 @@ st.write(choice if choice else "No design matches those constraints.")
 st.subheader("Replay the search")
 step = st.slider("evaluations", 1, len(history), len(history))
 cells = replay_archive(history, up_to=step)
-grid = np.full((7, results["config"]["map"]["x_bins"]), np.nan)
+grid = np.full((len(CONV_Y_EDGES) - 1, results["config"]["map"]["x_bins"]), np.nan)
 for (i, j), c in cells.items():
     grid[j, i] = c["val_accuracy"]
 st.write(f"cells filled: {len(cells)}")
-st.image(np.nan_to_num(grid), caption="val accuracy heatmap", use_column_width=True, clamp=True)
+st.image(np.nan_to_num(grid), caption="val accuracy heatmap", use_container_width=True, clamp=True)
+
+figures = comparison_figures(results)
+
+st.subheader("MAP-Elites vs random search")
+st.pyplot(figures["qd"])
+st.pyplot(figures["coverage"])
+
+st.subheader("Discovered vs true frontier")
+st.pyplot(figures["frontier"])
