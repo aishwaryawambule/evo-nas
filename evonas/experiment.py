@@ -26,6 +26,8 @@ def run_experiment(config, benchmark):
     budget = config["budget"]
     init_random = config["init_random"]
     factory = build_factory(benchmark, x_bins)
+    # persisted so consumers can label the size axis with real param values
+    x_edges = [float(v) for v in factory().x_edges]
 
     gt = ground_truth_archive(benchmark, factory)
     n_reachable = len(gt.cells)
@@ -48,6 +50,7 @@ def run_experiment(config, benchmark):
     return {
         "config": config,
         "n_reachable": n_reachable,
+        "x_edges": x_edges,
         "seeds": seeds,
         "ground_truth": {
             "qd_score": gt.qd_score(),
