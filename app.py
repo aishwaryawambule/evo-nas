@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 
 from evonas.uidata import (load_results, comparison_figures, describe_genome,
@@ -24,12 +26,20 @@ accuracy-vs-cost menu instead of a single winner.
   rather than against another heuristic.
 """)
 
-path = st.text_input("Results JSON path", "results/fake.json")
+# prefer real NAS-Bench-201 results if present, else the no-download fake run
+_default = next((p for p in ("results/cifar10.json", "results/fake.json")
+                 if os.path.exists(p)), "results/cifar10.json")
+path = st.text_input("Results JSON path", _default)
+if os.path.basename(path) == "cifar10.json":
+    st.caption("Showing **real NAS-Bench-201 / CIFAR-10** data — actual trained accuracies.")
+else:
+    st.caption("Showing the **synthetic FakeBenchmark** run (no data download needed).")
 try:
     results = load_results(path)
 except FileNotFoundError:
-    st.warning("No results yet. Run: "
-               "`python run_search.py --config configs/fake.yaml --out results/fake.json`")
+    st.warning("No results at that path. Generate one first:\n\n"
+               "- real data: `python run_search.py --config configs/cifar10.yaml --out results/cifar10.json`\n"
+               "- no download: `python run_search.py --config configs/fake.yaml --out results/fake.json`")
     st.stop()
 
 seed_entry = results["seeds"][0]
