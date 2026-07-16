@@ -30,7 +30,7 @@ grid = np.full((len(CONV_Y_EDGES) - 1, results["config"]["map"]["x_bins"]), np.n
 for (i, j), c in cells.items():
     grid[j, i] = c["val_accuracy"]
 st.write(f"cells filled: {len(cells)}")
-st.image(np.nan_to_num(grid), caption="val accuracy heatmap", use_container_width=True, clamp=True)
+st.image(np.nan_to_num(grid), caption="val accuracy heatmap", width="stretch", clamp=True)
 
 figures = comparison_figures(results)
 
