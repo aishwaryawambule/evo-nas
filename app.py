@@ -1,9 +1,10 @@
 import os
 
+import pandas as pd
 import streamlit as st
 
 from evonas.uidata import (load_results, comparison_figures, describe_genome,
-                           replay_grid)
+                           replay_grid, archive_table)
 from evonas.select import select_design
 from evonas.plots import grid_heatmap_figure
 
@@ -52,9 +53,32 @@ st.caption(
     "read off the best architecture that satisfies it. This is what a quality-diversity "
     "result buys you over a single-best-architecture result."
 )
-max_p = st.slider("max model size (millions of parameters)", 0.0, 2.0, 2.0, 0.05)
-min_a = st.slider("min test accuracy", 0.0, 1.0, 0.0, 0.01)
-choice = select_design(elites, max_params=max_p, min_accuracy=min_a)
+# slider ranges track the archive's actual span, so no part of their travel is dead
+_p = [e["params"] for e in elites]
+_a = [e["test_accuracy"] for e in elites]
+p_lo, p_hi = float(min(_p)), float(max(_p))
+a_lo, a_hi = float(min(_a)), float(max(_a))
+
+mode = st.radio(
+    "optimize for", ["best accuracy", "smallest model"], horizontal=True,
+    help="Each mode reads the archive from one end: cap the size and take the most "
+         "accurate design, or set an accuracy floor and take the cheapest one.",
+)
+smallest = mode == "smallest model"
+
+# Each mode has exactly one constraint that can bind. Maximising accuracy under an
+# accuracy floor is vacuous — the winner clears any floor it possibly can — so that
+# slider is disabled rather than left looking live but inert.
+max_p = st.slider("max model size (millions of parameters)", p_lo, p_hi, p_hi, 0.01,
+                  disabled=smallest)
+min_a = st.slider("min test accuracy", a_lo, a_hi, a_lo, 0.001, format="%.3f",
+                  disabled=not smallest)
+st.caption(
+    "Set an **accuracy floor**; the archive returns the cheapest design that clears it."
+    if smallest else
+    "Set a **size cap**; the archive returns the most accurate design that fits."
+)
+choice = select_design(elites, max_params=max_p, min_accuracy=min_a, smallest=smallest)
 
 if choice is None:
     st.info("No architecture in the archive satisfies those constraints — loosen a slider.")
@@ -65,6 +89,20 @@ else:
     c3.metric("conv ops in cell", choice["conv_count"])
     st.markdown("**The winning cell** — which operation sits on each edge of the cell's DAG:")
     st.table(describe_genome(choice["genome"]))
+
+st.markdown(
+    f"**The whole archive — all {len(elites)} designs.** The query above returns one row "
+    "(marked ◀); the search returned *every* row in a single run. This table is the "
+    "quality-diversity result itself — the accuracy-vs-cost menu the sliders read from."
+)
+st.dataframe(
+    pd.DataFrame(archive_table(elites, choice["genome"] if choice else None)),
+    width="stretch", hide_index=True,
+)
+st.caption(
+    "Sort by any column. Note that the largest design is **not** the best: filling all six "
+    "edges with convs leaves no room for the free `skip` to the output that every top design keeps."
+)
 
 st.header("2. Watch the archive fill in")
 st.caption(

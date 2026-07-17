@@ -7,7 +7,7 @@ from matplotlib.figure import Figure
 from evonas.benchmark import FakeBenchmark
 from evonas.experiment import run_experiment, to_json, from_json
 from evonas.uidata import (replay_archive, comparison_figures, describe_genome,
-                           replay_grid)
+                           replay_grid, archive_table)
 
 def test_replay_keeps_best_per_cell_up_to_step():
     history = [
@@ -57,6 +57,29 @@ def test_replay_grid_leaves_undiscovered_niches_nan():
     assert grid[3, 2] == 0.9
     # an undiscovered niche must be NaN, not 0.0 (0.0 would render as a real bad score)
     assert math.isnan(grid[6, 3])
+
+def _elite(genome, params, acc, conv):
+    return {"genome": list(genome), "params": params, "test_accuracy": acc,
+            "val_accuracy": acc, "conv_count": conv}
+
+def test_archive_table_shows_every_elite_smallest_first():
+    elites = [_elite((3, 3, 3, 3, 3, 3), 1.532, 0.9376, 6),
+              _elite((4, 0, 0, 1, 0, 0), 0.073, 0.8663, 0),
+              _elite((3, 2, 3, 1, 2, 2), 0.643, 0.9431, 5)]
+    rows = archive_table(elites)
+    assert len(rows) == 3                       # the whole archive, not one row
+    assert [r["params (M)"] for r in rows] == [0.073, 0.643, 1.532]
+    assert rows[0]["ops on the 6 edges"] == "pool / – / – / skip / – / –"
+    assert rows[0]["test acc %"] == 86.63       # a percentage, not a fraction
+
+def test_archive_table_marks_only_the_selected_row():
+    elites = [_elite((3, 3, 3, 3, 3, 3), 1.532, 0.9376, 6),
+              _elite((4, 0, 0, 1, 0, 0), 0.073, 0.8663, 0)]
+    rows = archive_table(elites, selected=(4, 0, 0, 1, 0, 0))
+    assert [r[""] for r in rows] == ["◀", ""]
+    # a genome the query didn't resolve to must leave every row unmarked
+    assert all(r[""] == "" for r in archive_table(elites, selected=(0, 0, 0, 0, 0, 0)))
+    assert all(r[""] == "" for r in archive_table(elites, selected=None))
 
 def test_x_edges_persisted_for_labelling_the_size_axis():
     config = {"dataset": "fake", "budget": 20, "map": {"x_bins": 20},
