@@ -1,7 +1,5 @@
 # QD-NAS (MAP-Elites over NAS-Bench-201) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Build a Quality-Diversity (MAP-Elites) evolutionary search over the NAS-Bench-201 architecture space that illuminates a map of the best network at every size, verifies itself against the enumerable ground truth, beats a random-search baseline, and ships an interactive Streamlit UI — all CPU-only via table lookup.
 
 **Architecture:** Small single-responsibility Python modules under `evonas/`. A genome is a length-6 integer tuple (one operation per cell edge). A pluggable `Benchmark` returns each genome's accuracy/size by lookup; a deterministic `FakeBenchmark` backs all tests so no data file is needed. The MAP-Elites loop mutates elites and files winners into an `Archive` grid. Enumerating all 15,625 genomes gives ground truth. CLIs run experiments and query saved maps; a Streamlit app visualizes them.
@@ -1724,7 +1722,7 @@ against the enumerable ground truth, with a Streamlit UI. CPU-only, no training.
     python scripts/export_nb201_csv.py --nats <pickle> --out data/nb201_cifar10.csv
     # then set `dataset: cifar10` and `data_csv: data/nb201_cifar10.csv` in a config
 
-See docs/superpowers/specs/2026-07-14-qd-nas-design.md for the design.
+See docs/specs/qd-nas-design.md for the design.
 ```
 
 - [ ] **Step 5: Commit**

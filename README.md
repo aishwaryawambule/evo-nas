@@ -8,21 +8,44 @@ accuracy-vs-cost menu rather than one winner — then grades itself against the 
 optimum, which is knowable here because the whole 15,625-architecture space can be
 enumerated.
 
-Runs on a laptop CPU. No training, no GPU: every architecture's accuracy is a table
-lookup into the benchmark.
+Runs on a laptop CPU in seconds. No training, no GPU, no PyTorch: every architecture's
+accuracy is a table lookup into the benchmark.
+
+## Why this exists
+
+A search algorithm is easy to claim and hard to verify. Point one at a real design space
+and you can report what it *found* — but never what it *missed*, because nobody knows the
+right answer.
+
+NAS-Bench-201 is small enough to brute-force. That makes it possible to compute the true
+best architecture in every niche and grade the search against the **actual optimum**
+rather than against another heuristic. That verification is what this repo is for.
+
+The price of that choice is honest and worth stating up front: because the answers are
+pre-computed, the architectures this finds have no downstream use. The verified behaviour
+of the search is the deliverable, not the designs.
 
 ## Results (real NAS-Bench-201, CIFAR-10)
 
-Identical evaluation budget (3,000 lookups ≈ 20% of the space), 5 seeds:
+Identical evaluation budget (3,000 lookups ≈ 19% of the space), 5 seeds:
 
 | | QD-score (of 25.21 max) | Niche coverage | Best found |
 |---|---|---|---|
 | **MAP-Elites** | **25.20** ± 0.00 | **100%** | **94.37%** — the true optimum |
 | Random search | 22.11 ± 0.45 | 88% | — |
 
+MAP-Elites recovers the true global optimum in **all five seeds** and reaches 99.94% of
+the theoretically achievable QD-score. It is also far more *consistent*: its QD-score
+varies by 0.04 across seeds, random search's by 3.75.
+
 The archive's real trade-off curve: **93.54%** at 0.43M params → **94.31%** at 0.64M →
 **94.37%** at 1.07M. That last 0.06% of accuracy costs 67% more parameters — the kind of
 call a single-best-architecture result can't help you make.
+
+**The honest floor:** an architecture whose cell is empty — every edge `none` or `skip`,
+zero learnable parameters inside the searched component — still scores **86.63%**, because
+NAS-Bench-201's fixed stem, reduction blocks, and classifier do that much on their own. So
+the entire dynamic range of this search problem is 86.63% → 94.37%, or **7.74 points**.
 
 ## Install
 
@@ -49,6 +72,8 @@ evonas-design --map results/fake.json --max-params 1.0
 streamlit run app.py
 ```
 
+Full flag reference: [COMMANDS.md](COMMANDS.md).
+
 ## Real NAS-Bench-201 data (CIFAR-10)
 
 ```bash
@@ -62,7 +87,9 @@ evonas-search --config configs/cifar10.yaml --out results/cifar10.json
 streamlit run app.py                     # auto-prefers results/cifar10.json
 ```
 
-`data/` and `results/` are git-ignored — regenerate them with the commands above.
+The export runs once and reduces 2.2 GB of benchmark pickles to an 880 KB CSV; after that
+`nats_bench` and `gdown` are never needed again. `data/` and `results/` are git-ignored —
+regenerate them with the commands above.
 
 ## Use it as a library
 
@@ -88,11 +115,15 @@ print(select_design(archive.elites(), max_params=1.0))
 ## How it works
 
 An architecture is the NAS-Bench-201 cell: a 4-node DAG whose **6 edges** each take one
-of **5 operations** — so a design is six integers, and the space is 5⁶ = 15,625.
+of **5 operations** — so a design is six integers, and the space is 5⁶ = 15,625. The node
+count, wiring, operation set, and surrounding macro-architecture are all fixed by the
+benchmark; the search chooses only which operation sits on each edge.
 
 MAP-Elites keeps a grid ("archive") of niches indexed by **model size × conv-op count**,
 storing the best architecture found in each. Each iteration it mutates one edge of a
-random elite, looks the child up, and files it if it beats that niche's incumbent.
+random elite, looks the child up, and files it if it beats that niche's incumbent. Parent
+selection is uniform over the archive, not biased toward the best — that is what spreads
+coverage.
 
 Because the space is enumerable, `ground_truth.py` computes the *exact* best-per-niche
 and true Pareto front, so results are measured against the real optimum rather than
@@ -101,6 +132,25 @@ another heuristic.
 **Honest protocol:** search selects on **validation** accuracy (models trained on the
 train split); every reported number is **test** accuracy (models trained on train+valid).
 Nothing is ever selected on the test set.
+
+## Known limitations
+
+**The behaviour descriptors are partly degenerate.** Model size is exactly
+`0.073306 + 0.028·n₁ₓ₁ + 0.243040·n₃ₓ₃` — a function of operation *counts* only, because
+NAS-Bench-201 cells are channel-uniform, so an operation costs the same on any edge.
+Conv-count is `n₁ₓ₁ + n₃ₓ₃`. Both axes therefore read off the same two numbers, which caps
+the archive at **28 reachable niches** out of a nominal 20×7 grid — no binning choice can
+exceed that. FLOPs is degenerate for the same reason.
+
+A topological descriptor would break the ceiling: longest path node0→node3 yields 74
+niches, skip-connection count yields 84. That is the most worthwhile extension here — not
+hyperparameter tuning, which has no headroom left at 99.94% of ground truth.
+
+**The budget is generous.** 3,000 evaluations is 19% of the space. The regime that matters
+for real NAS is 1–2%, and it has not been run.
+
+**Scope.** CIFAR-10 only (the exporter rejects other datasets); mutation-only, no
+crossover; no CMA-ME or CVT-MAP-Elites variants.
 
 ## Layout
 
@@ -116,7 +166,13 @@ Nothing is ever selected on the test set.
 | `select.py` | query an archive under size/accuracy constraints |
 | `plots.py` / `uidata.py` / `app.py` | figures and the Streamlit explorer |
 
-Design notes: [`docs/superpowers/specs/`](docs/superpowers/specs/).
+Design notes: [`docs/specs/qd-nas-design.md`](docs/specs/qd-nas-design.md).
+
+## References
+
+- Mouret & Clune (2015), *Illuminating search spaces by mapping elites* — the MAP-Elites algorithm.
+- Dong & Yang (2020), *NAS-Bench-201* — the benchmark.
+- Dong et al. (2021), *NATS-Bench* — the distribution this repo exports from.
 
 ## License
 
