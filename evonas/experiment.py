@@ -7,7 +7,7 @@ from evonas.archive import Archive, param_bin_edges, CONV_Y_EDGES
 from evonas.map_elites import map_elites
 from evonas.random_search import random_search
 from evonas.ground_truth import ground_truth_archive
-from evonas.metrics import pareto_front
+from evonas.metrics import evaluate, pareto_front
 
 def load_config(path):
     with open(path) as f:
@@ -43,8 +43,10 @@ def run_experiment(config, benchmark):
             np.random.default_rng(seed), n_reachable)
         seeds.append({
             "seed": seed,
-            "map_elites": {"history": me_hist, "elites": _elite_list(me_archive)},
-            "random": {"history": rs_hist, "elites": _elite_list(rs_archive)},
+            "map_elites": {"history": me_hist, "elites": _elite_list(me_archive),
+                           "vs_ground_truth": evaluate(me_archive, gt, n_reachable)},
+            "random": {"history": rs_hist, "elites": _elite_list(rs_archive),
+                       "vs_ground_truth": evaluate(rs_archive, gt, n_reachable)},
         })
 
     return {

@@ -30,10 +30,16 @@ class Archive:
         return False
 
     def random_elite(self, rng):
+        if not self.cells:
+            raise ValueError(
+                "archive is empty — seed it with random genomes before "
+                "selecting a parent (see map_elites' init_random)")
         keys = list(self.cells.keys())
         return self.cells[keys[int(rng.integers(len(keys)))]]["genome"]
 
     def coverage(self, n_reachable):
+        if n_reachable <= 0:
+            raise ValueError(f"n_reachable must be positive, got {n_reachable}")
         return len(self.cells) / n_reachable
 
     def qd_score(self):
