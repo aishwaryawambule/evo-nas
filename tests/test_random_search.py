@@ -1,13 +1,13 @@
 import numpy as np
 from evonas.benchmark import FakeBenchmark
-from evonas.archive import Archive, param_bin_edges, CONV_Y_EDGES
+from evonas.archive import Archive, param_bin_edges, DEPTH_Y_EDGES
 from evonas.genome import index_to_genome
 from evonas.random_search import random_search
 
 def make_factory():
     all_params = [FakeBenchmark().query(index_to_genome(i))["params"] for i in range(5**6)]
     edges = param_bin_edges(all_params, x_bins=20)
-    return lambda: Archive(edges, CONV_Y_EDGES)
+    return lambda: Archive(edges, DEPTH_Y_EDGES)
 
 def test_history_length_equals_budget():
     _, history = random_search(FakeBenchmark(), make_factory(), budget=200,

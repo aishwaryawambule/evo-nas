@@ -1,8 +1,8 @@
-from evonas.archive import Archive, param_bin_edges, CONV_Y_EDGES
+from evonas.archive import Archive, param_bin_edges, DEPTH_Y_EDGES
 from evonas.metrics import metrics_snapshot, evaluate, pareto_front
 
 def make_archive():
-    return Archive(param_bin_edges([0.0, 1.8], 4), CONV_Y_EDGES)
+    return Archive(param_bin_edges([0.0, 1.8], 4), DEPTH_Y_EDGES)
 
 def rec(val, params, cc):
     return {"val_accuracy": val, "test_accuracy": val - 0.01,

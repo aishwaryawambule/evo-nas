@@ -2,7 +2,7 @@ import numpy as np
 
 from evonas.experiment import from_json
 from evonas.genome import OPS
-from evonas.archive import CONV_Y_EDGES
+from evonas.archive import DEPTH_Y_EDGES
 
 # NAS-Bench-201 cell edges, in genome order: node i receives from every node j < i.
 EDGE_LABELS = ("node1 ← node0", "node2 ← node0", "node2 ← node1",
@@ -62,7 +62,7 @@ def replay_grid(results, history, up_to):
     Undiscovered niches stay NaN so they render blank rather than as accuracy 0.
     """
     cells = replay_archive(history, up_to)
-    grid = np.full((len(CONV_Y_EDGES) - 1, results["config"]["map"]["x_bins"]), np.nan)
+    grid = np.full((len(DEPTH_Y_EDGES) - 1, results["config"]["map"]["x_bins"]), np.nan)
     for (i, j), c in cells.items():
         grid[j, i] = c["val_accuracy"]
     return grid, len(cells)

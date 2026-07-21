@@ -16,7 +16,7 @@ def grid_heatmap_figure(grid, x_edges=None):
     else:
         im = ax.imshow(grid, origin="lower", aspect="auto")
         ax.set_xlabel("model size bin (small → large)")
-    ax.set_ylabel("conv ops in cell")
+    ax.set_ylabel("cell depth (longest input→output path)")
     ax.set_yticks(range(grid.shape[0]))
     fig.colorbar(im, ax=ax, label="best val accuracy in niche")
     return fig

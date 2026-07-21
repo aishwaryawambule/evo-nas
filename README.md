@@ -3,7 +3,7 @@
 **Quality-diversity neural architecture search on NAS-Bench-201.**
 
 Most NAS returns a single "best" network. `evo-nas` runs **MAP-Elites** instead: it
-keeps an *archive* of the best architecture at **every** model size, giving you an
+keeps an *archive* of the best architecture in **every** size-and-depth niche, giving you an
 accuracy-vs-cost menu rather than one winner — then grades itself against the true
 optimum, which is knowable here because the whole 15,625-architecture space can be
 enumerated.
@@ -27,25 +27,27 @@ of the search is the deliverable, not the designs.
 
 ## Results (real NAS-Bench-201, CIFAR-10)
 
+The archive is illuminated over **model size × cell depth** — 40 reachable niches.
 Identical evaluation budget (3,000 lookups ≈ 19% of the space), 5 seeds:
 
-| | QD-score (of 25.21 max) | Niche coverage | Best found |
+| | QD-score (of 30.32 max) | Niche coverage | Best found |
 |---|---|---|---|
-| **MAP-Elites** | **25.20** ± 0.00 | **100%** | **94.37%** — the true optimum |
-| Random search | 22.11 ± 0.45 | 88% | — |
+| **MAP-Elites** | **30.05** ± 0.52 | **98%** (100% on 4/5 seeds) | **94.37%** — the true optimum |
+| Random search | 26.28 ± 0.45 | 88% | — |
 
-MAP-Elites recovers the true global optimum in **all five seeds** and reaches 99.94% of
-the theoretically achievable QD-score. It is also far more *consistent*: its QD-score
-varies by 0.04 across seeds, random search's by 3.75.
+MAP-Elites recovers the true global optimum in **all five seeds** and reaches 99.1% of the
+theoretically achievable QD-score, against random search's 87%. These 40 niches are harder
+to fill than a degenerate 28 (see [Known limitations](#known-limitations)) — one seed fell
+short of full coverage — but MAP-Elites still beats random search on every seed.
 
-The archive's real trade-off curve: **93.54%** at 0.43M params → **94.31%** at 0.64M →
-**94.37%** at 1.07M. That last 0.06% of accuracy costs 67% more parameters — the kind of
-call a single-best-architecture result can't help you make.
+Trade-off from the archive: **93.50%** at 0.40M params → **93.88%** at 0.62M → **94.37%**
+at 1.07M. And the largest network in the space (1.53M, all 3×3) scores only **93.76%** —
+past a point smaller is better, a call a single-best-architecture result can't help you make.
 
 **The honest floor:** an architecture whose cell is empty — every edge `none` or `skip`,
-zero learnable parameters inside the searched component — still scores **86.63%**, because
-NAS-Bench-201's fixed stem, reduction blocks, and classifier do that much on their own. So
-the entire dynamic range of this search problem is 86.63% → 94.37%, or **7.74 points**.
+zero learnable parameters inside the searched component (cell depth 0) — still scores
+**86.63%**, because NAS-Bench-201's fixed stem, reduction blocks, and classifier do that
+much on their own. So the search's real dynamic range is 86.63% → 94.37%, or **7.74 points**.
 
 ## Install
 
@@ -119,11 +121,11 @@ of **5 operations** — so a design is six integers, and the space is 5⁶ = 15,
 count, wiring, operation set, and surrounding macro-architecture are all fixed by the
 benchmark; the search chooses only which operation sits on each edge.
 
-MAP-Elites keeps a grid ("archive") of niches indexed by **model size × conv-op count**,
-storing the best architecture found in each. Each iteration it mutates one edge of a
-random elite, looks the child up, and files it if it beats that niche's incumbent. Parent
-selection is uniform over the archive, not biased toward the best — that is what spreads
-coverage.
+MAP-Elites keeps a grid ("archive") of niches indexed by **model size × cell depth** (the
+longest input→output path through the cell), storing the best architecture found in each.
+Each iteration it mutates one edge of a random elite, looks the child up, and files it if it
+beats that niche's incumbent. Parent selection is uniform over the archive, not biased
+toward the best — that is what spreads coverage.
 
 Because the space is enumerable, `ground_truth.py` computes the *exact* best-per-niche
 and true Pareto front, so results are measured against the real optimum rather than
@@ -135,22 +137,23 @@ Nothing is ever selected on the test set.
 
 ## Known limitations
 
-**The behaviour descriptors are partly degenerate.** Model size is exactly
-`0.073306 + 0.028·n₁ₓ₁ + 0.243040·n₃ₓ₃` — a function of operation *counts* only, because
-NAS-Bench-201 cells are channel-uniform, so an operation costs the same on any edge.
-Conv-count is `n₁ₓ₁ + n₃ₓ₃`. Both axes therefore read off the same two numbers, which caps
-the archive at **28 reachable niches** out of a nominal 20×7 grid — no binning choice can
-exceed that. FLOPs is degenerate for the same reason.
-
-A topological descriptor would break the ceiling: longest path node0→node3 yields 74
-niches, skip-connection count yields 84. That is the most worthwhile extension here — not
-hyperparameter tuning, which has no headroom left at 99.94% of ground truth.
+**Why depth, and why coverage isn't perfect.** An earlier version binned the y-axis on
+conv-op count. But model size is exactly `0.073306 + 0.028·n₁ₓ₁ + 0.243040·n₃ₓ₃` — a
+function of operation *counts* only, because NAS-Bench-201 cells are channel-uniform — and
+conv-count is `n₁ₓ₁ + n₃ₓ₃`, so both axes read off the same two numbers and the archive
+capped at a **degenerate 28 niches** that no binning could exceed (FLOPs fails the same
+way). The y-axis is now **cell depth**, which depends on *where* the ops sit, not how many,
+so it varies independently of size — 40 genuinely-2-D niches
+([design note](docs/specs/2026-07-21-depth-descriptor.md)). Those niches are harder to
+fill: at the current budget MAP-Elites reaches full coverage on 4 of 5 seeds and 88% on the
+fifth. Restoring perfect coverage would take a larger budget, not a better descriptor.
 
 **The budget is generous.** 3,000 evaluations is 19% of the space. The regime that matters
-for real NAS is 1–2%, and it has not been run.
+for real NAS is 1–2%, and it has not been swept.
 
 **Scope.** CIFAR-10 only (the exporter rejects other datasets); mutation-only, no
-crossover; no CMA-ME or CVT-MAP-Elites variants.
+crossover; depth counts a skip connection as a hop (graph path length, not learnable-layer
+depth); no CMA-ME or CVT-MAP-Elites variants.
 
 ## Layout
 

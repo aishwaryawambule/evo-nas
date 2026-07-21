@@ -36,6 +36,22 @@ def index_to_genome(idx):
 def conv_count(g):
     return sum(1 for op in g if op in CONV_OPS)
 
+# cell edges in genome order: gene k wires EDGES[k] = (src_node, dst_node).
+# node i receives from every node j < i, so the DAG is fixed — only the ops vary.
+EDGES = ((0, 1), (0, 2), (1, 2), (0, 3), (1, 3), (2, 3))
+
+def cell_depth(g):
+    """Longest path from input (node0) to output (node3) over present (non-'none')
+    edges, counting each edge as one hop. 0 means node3 is unreachable — the cell
+    is disconnected and contributes nothing but the surrounding macro-architecture."""
+    reach = {0: 0}
+    for node in (1, 2, 3):  # topological order: a node's inputs are all earlier
+        hops = [reach[s] + 1 for k, (s, d) in enumerate(EDGES)
+                if d == node and g[k] != 0 and s in reach]
+        if hops:
+            reach[node] = max(hops)
+    return reach.get(3, 0)
+
 def genome_to_arch_str(g):
     node1 = f"|{OPS[g[0]]}~0|"
     node2 = f"|{OPS[g[1]]}~0|{OPS[g[2]]}~1|"

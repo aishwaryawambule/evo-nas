@@ -1,7 +1,7 @@
 import numpy as np
 from evonas.genome import (
     OPS, NUM_EDGES, random_genome, genome_to_index,
-    index_to_genome, genome_to_arch_str, conv_count,
+    index_to_genome, genome_to_arch_str, conv_count, cell_depth,
 )
 
 def test_ops_are_the_five_nb201_operations():
@@ -24,6 +24,18 @@ def test_index_covers_exactly_15625():
 def test_conv_count_counts_only_conv_ops():
     assert conv_count((2, 3, 0, 1, 4, 2)) == 3  # ops 2,3,2 are conv
     assert conv_count((0, 1, 4, 0, 1, 4)) == 0
+
+def test_cell_depth_is_longest_input_to_output_path():
+    # edges: g0:0->1 g1:0->2 g2:1->2 g3:0->3 g4:1->3 g5:2->3
+    assert cell_depth((0, 0, 0, 0, 0, 0)) == 0     # all none: node3 unreachable
+    assert cell_depth((4, 0, 0, 1, 0, 0)) == 1     # direct node0->node3 (skip counts as a hop)
+    assert cell_depth((3, 0, 0, 0, 3, 0)) == 2     # node0->node1->node3
+    assert cell_depth((3, 0, 3, 0, 0, 3)) == 3     # node0->node1->node2->node3, full chain
+    assert cell_depth((3, 3, 3, 3, 3, 3)) == 3     # fully connected: longest path still 3
+
+def test_cell_depth_ignores_dead_end_branches():
+    # node1 gets input but leads nowhere; the only path to node3 is the direct edge
+    assert cell_depth((3, 0, 0, 2, 0, 0)) == 1
 
 def test_arch_str_matches_nb201_format():
     g = (0, 0, 0, 0, 0, 0)

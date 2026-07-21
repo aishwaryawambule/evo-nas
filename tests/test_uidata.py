@@ -51,12 +51,12 @@ def test_replay_grid_leaves_undiscovered_niches_nan():
         {"eval": 2, "insert": {"cell": [2, 3], "val_accuracy": 0.9, "genome": [1,0,0,0,0,0]}},
     ]
     grid, n_filled = replay_grid(results, history, up_to=2)
-    assert grid.shape == (7, 4)          # 7 conv-count rows
+    assert grid.shape == (4, 4)          # 4 depth rows
     assert n_filled == 2
     assert grid[0, 0] == 0.8
     assert grid[3, 2] == 0.9
     # an undiscovered niche must be NaN, not 0.0 (0.0 would render as a real bad score)
-    assert math.isnan(grid[6, 3])
+    assert math.isnan(grid[3, 3])
 
 def _elite(genome, params, acc, conv):
     return {"genome": list(genome), "params": params, "test_accuracy": acc,

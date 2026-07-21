@@ -19,7 +19,9 @@ accuracy-vs-cost menu instead of a single winner.
 - **Search space** — the NAS-Bench-201 cell: 6 edges × 5 candidate ops = **15,625** architectures.
 - **Evaluation is free** — every architecture's accuracy is pre-computed in the benchmark, so
   search is a table lookup. No training; runs on a laptop CPU.
-- **Niches** — the archive's two axes: model size (parameters) × number of conv ops in the cell.
+- **Niches** — the archive's two axes: model size (parameters) × cell depth (the longest
+  input→output path through the cell). Depth comes from *where* the ops sit, not how many,
+  so it varies independently of size — two same-size cells wired differently are kept apart.
 - **Protocol** — search selects on **validation** accuracy; every number reported here is
   **test** accuracy, so nothing is selected on the test set.
 - **Why this space** — it's small enough to enumerate all 15,625, so the *true* best-per-niche

@@ -33,12 +33,12 @@ usage: evonas-search [-h] --config CONFIG --out OUT
 evonas-search --config configs/fake.yaml --out results/fake.json
 ```
 ```
-wrote results/fake.json: 28 reachable cells
+wrote results/fake.json: 54 reachable cells
 ```
 
-The printed cell count is how many niches any architecture can actually occupy — 28
-for NAS-Bench-201, out of a nominal 20×7 = 140 grid. The rest are geometrically
-impossible, not merely undiscovered.
+The printed cell count is how many niches any architecture can actually occupy — **40**
+for real NAS-Bench-201 (54 for the synthetic benchmark, whose param values differ), out of
+a nominal 20×4 = 80 grid. The rest are geometrically impossible, not merely undiscovered.
 
 Real data (requires the [CSV export](#scripts-export_nb201_csvpy) first):
 
@@ -63,10 +63,9 @@ seeds: [0, 1, 2, 3, 4]              # one full run per seed
 Notes on the knobs:
 
 - **`budget`** is the one that matters. 3,000 is 19% of the 15,625-architecture space.
-- **`x_bins`** saturates at 10 — any value ≥10 yields the same 28 reachable niches,
-  because model size only takes 28 distinct values. Larger values just render a
-  wider heatmap.
-- The conv-count axis is not configurable; it is fixed at 7 bins (counts 0–6).
+- **`x_bins`** sets the model-size resolution of the archive's x-axis. Finer bins split
+  more designs apart (up to the 28 distinct param values); coarser bins merge them.
+- The y-axis is **cell depth** and is not configurable — it is fixed at 4 bins (depth 0–3).
 
 ---
 
@@ -237,7 +236,7 @@ labels which one is on screen.
 streamlit run app.py                     # http://localhost:8501
 ```
 
-Four sections: query the archive (with the full 28-design table), replay the search
+Four sections: query the archive (with the full 40-design table), replay the search
 filling niches in, MAP-Elites vs random search convergence, and the archive against
 the exactly-known Pareto front.
 
@@ -252,7 +251,7 @@ pip install ".[ui,dev]"
 pytest -q
 ```
 ```
-65 passed
+68 passed
 ```
 
 CI runs the suite on Python 3.11, 3.12, and 3.13, then does an end-to-end smoke run of

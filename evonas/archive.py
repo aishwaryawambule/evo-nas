@@ -1,6 +1,8 @@
 import numpy as np
 
-CONV_Y_EDGES = np.arange(-0.5, 7.5, 1.0)  # 7 bins for conv_count 0..6
+from evonas.genome import cell_depth
+
+DEPTH_Y_EDGES = np.arange(-0.5, 4.5, 1.0)  # 4 bins for cell depth 0..3
 
 def param_bin_edges(all_params, x_bins):
     lo, hi = float(min(all_params)), float(max(all_params))
@@ -18,14 +20,20 @@ class Archive:
         self.y_edges = np.asarray(y_edges, dtype=float)
         self.cells = {}
 
-    def cell_index(self, params, conv_count):
-        return (_bin(params, self.x_edges), _bin(conv_count, self.y_edges))
+    def cell_index(self, params, y_value):
+        return (_bin(params, self.x_edges), _bin(y_value, self.y_edges))
+
+    def cell_of(self, genome, record):
+        """The (x, y) niche a design occupies: model size on x, cell depth on y.
+        Depth comes from the genome's wiring, so it is independent of size."""
+        return self.cell_index(record["params"], cell_depth(genome))
 
     def insert(self, genome, record):
-        key = self.cell_index(record["params"], record["conv_count"])
+        depth = cell_depth(genome)
+        key = self.cell_index(record["params"], depth)
         cur = self.cells.get(key)
         if cur is None or record["val_accuracy"] > cur["val_accuracy"]:
-            self.cells[key] = {"genome": genome, **record}
+            self.cells[key] = {"genome": genome, "depth": depth, **record}
             return True
         return False
 

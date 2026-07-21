@@ -12,7 +12,7 @@ def _search(benchmark, make_archive, budget, rng, n_reachable, candidate):
         inserted = archive.insert(g, rec)
         best = max(best, rec["val_accuracy"])
         snap = metrics_snapshot(archive, evals, best, n_reachable)
-        snap["insert"] = {"cell": list(archive.cell_index(rec["params"], rec["conv_count"])),
+        snap["insert"] = {"cell": list(archive.cell_of(g, rec)),
                           "val_accuracy": rec["val_accuracy"], "genome": list(g)} if inserted else None
         history.append(snap)
     return archive, history

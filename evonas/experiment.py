@@ -3,7 +3,7 @@ import numpy as np
 import yaml
 
 from evonas.genome import index_to_genome
-from evonas.archive import Archive, param_bin_edges, CONV_Y_EDGES
+from evonas.archive import Archive, param_bin_edges, DEPTH_Y_EDGES
 from evonas.map_elites import map_elites
 from evonas.random_search import random_search
 from evonas.ground_truth import ground_truth_archive
@@ -16,7 +16,7 @@ def load_config(path):
 def build_factory(benchmark, x_bins):
     all_params = [benchmark.query(index_to_genome(i))["params"] for i in range(5 ** 6)]
     edges = param_bin_edges(all_params, x_bins)
-    return lambda: Archive(edges, CONV_Y_EDGES)
+    return lambda: Archive(edges, DEPTH_Y_EDGES)
 
 def _elite_list(archive):
     return [dict(c) for c in archive.elites()]
