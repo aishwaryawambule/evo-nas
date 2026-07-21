@@ -92,13 +92,20 @@ else:
 
 st.markdown(
     f"**The whole archive — all {len(elites)} designs.** The query above returns one row "
-    "(marked ◀); the search returned *every* row in a single run. This table is the "
+    "(highlighted); the search returned *every* row in a single run. This table is the "
     "quality-diversity result itself — the accuracy-vs-cost menu the sliders read from."
 )
-st.dataframe(
-    pd.DataFrame(archive_table(elites, choice["genome"] if choice else None)),
-    width="stretch", hide_index=True,
-)
+_rows, _sel = archive_table(elites, choice["genome"] if choice else None)
+_df = pd.DataFrame(_rows)
+if _sel is not None:
+    _styled = _df.style.apply(
+        lambda row: ["background-color: rgba(255, 75, 75, 0.18)"
+                     if row.name == _sel else "" for _ in row],
+        axis=1,
+    )
+    st.dataframe(_styled, width="stretch", hide_index=True)
+else:
+    st.dataframe(_df, width="stretch", hide_index=True)
 st.caption(
     "Sort by any column. Note that the largest design is **not** the best: filling all six "
     "edges with convs leaves no room for the free `skip` to the output that every top design keeps."

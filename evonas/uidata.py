@@ -34,21 +34,27 @@ def archive_table(elites, selected=None):
 
     This is the archive's actual deliverable — a search returns all of these at
     once, so the menu is worth showing whole rather than one row at a time.
-    `selected` (a genome) marks the row a query currently resolves to.
+
+    Returns ``(rows, selected_index)``: the display rows, and the position of the
+    row a query currently resolves to (or ``None``). The caller highlights that
+    row rather than the table carrying a marker column of its own.
     """
     sel = tuple(selected) if selected is not None else None
+    ordered = sorted(elites, key=lambda e: e["params"])
+    selected_index = None
     rows = []
-    for e in sorted(elites, key=lambda e: e["params"]):
+    for i, e in enumerate(ordered):
         g = tuple(e["genome"])
+        if g == sel:
+            selected_index = i
         rows.append({
-            "": "◀" if g == sel else "",
             "params (M)": round(e["params"], 3),
             "test acc %": round(e["test_accuracy"] * 100, 2),
             "conv ops": e["conv_count"],
             "genome": str(list(g)),
             "ops on the 6 edges": " / ".join(OP_SHORT[OPS[o]] for o in g),
         })
-    return rows
+    return rows, selected_index
 
 def replay_grid(results, history, up_to):
     """Archive grid as of `up_to` evaluations, plus how many niches are filled.
