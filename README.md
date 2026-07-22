@@ -14,9 +14,8 @@ accuracy is a table lookup into the benchmark.
 > **The archive's second axis started as conv-op count** — until using the tool showed that
 > was a function of model size, so the map was effectively 1-D and capped at a degenerate 28
 > niches no binning could exceed. It is now **cell depth**, a topological measure independent
-> of size: 40 genuine niches, verified to still recover the true optimum. The before/after is
-> in [Known limitations](#known-limitations); the design note is in
-> [docs/specs](docs/specs/2026-07-21-depth-descriptor.md).
+> of size: 40 genuine niches, verified to still recover the true optimum. The full
+> before/after is in [Known limitations](#known-limitations).
 
 ## Why this exists
 
@@ -150,8 +149,7 @@ function of operation *counts* only, because NAS-Bench-201 cells are channel-uni
 conv-count is `n₁ₓ₁ + n₃ₓ₃`, so both axes read off the same two numbers and the archive
 capped at a **degenerate 28 niches** that no binning could exceed (FLOPs fails the same
 way). The y-axis is now **cell depth**, which depends on *where* the ops sit, not how many,
-so it varies independently of size — 40 genuinely-2-D niches
-([design note](docs/specs/2026-07-21-depth-descriptor.md)). Those niches are harder to
+so it varies independently of size — 40 genuinely-2-D niches. Those niches are harder to
 fill: at the current budget MAP-Elites reaches full coverage on 4 of 5 seeds and 88% on the
 fifth. Restoring perfect coverage would take a larger budget, not a better descriptor.
 
@@ -175,8 +173,6 @@ depth); no CMA-ME or CVT-MAP-Elites variants.
 | `metrics.py` | QD-score, coverage, Pareto front |
 | `select.py` | query an archive under size/accuracy constraints |
 | `plots.py` / `uidata.py` / `app.py` | figures and the Streamlit explorer |
-
-Design notes: [`docs/specs/qd-nas-design.md`](docs/specs/qd-nas-design.md).
 
 ## References
 
