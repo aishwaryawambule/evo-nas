@@ -57,14 +57,19 @@ much on their own. So the search's real dynamic range is 86.63% → 94.37%, or *
 
 ## Install
 
+Not published to PyPI yet. For the library and the `evonas-search` / `evonas-design`
+CLIs, install straight from GitHub:
+
 ```bash
-pip install evonas            # library + evonas-search / evonas-design
-pip install "evonas[ui]"      # + the Streamlit explorer
+pip install "git+https://github.com/aishwaryawambule/evo-nas.git"
 ```
 
-From a clone:
+The Streamlit explorer (`app.py`) and the tests live in the repo tree, not the installed
+package — for those, clone it:
 
 ```bash
+git clone https://github.com/aishwaryawambule/evo-nas.git
+cd evo-nas
 pip install ".[ui,dev]"
 pytest -q
 ```
@@ -84,8 +89,10 @@ Full flag reference: [COMMANDS.md](COMMANDS.md).
 
 ## Real NAS-Bench-201 data (CIFAR-10)
 
+From a clone (the export script and app live in the repo):
+
 ```bash
-pip install "evonas[data]"     # nats_bench + gdown; both numpy-only, no PyTorch
+pip install ".[data]"          # nats_bench + gdown; both numpy-only, no PyTorch
 gdown "https://drive.google.com/uc?id=17_saCsj_krKjlCBLOJEpNtzPXArMCqxU" \
     -O data/NATS-tss-simple.tar          # ~1.1 GB, once
 tar xf data/NATS-tss-simple.tar -C data/

@@ -199,7 +199,7 @@ evonas-design: error: argument --smallest: not allowed with argument --best
 ## `scripts/export_nb201_csv.py`
 
 One-off. Converts the NATS-Bench distribution into the 880 KB CSV the benchmark
-reads. Needs `pip install "evonas[data]"` (`nats_bench` + `gdown`, both numpy-only).
+reads. From a clone, needs `pip install ".[data]"` (`nats_bench` + `gdown`, both numpy-only).
 
 ```
 usage: export_nb201_csv.py [-h] --nats NATS --out OUT [--dataset DATASET]
@@ -240,7 +240,7 @@ Four sections: query the archive (with the full 40-design table), replay the sea
 filling niches in, MAP-Elites vs random search convergence, and the archive against
 the exactly-known Pareto front.
 
-Requires the UI extra: `pip install "evonas[ui]"`.
+Requires the UI extra, from a clone: `pip install ".[ui]"`.
 
 ---
 
