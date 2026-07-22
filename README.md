@@ -57,8 +57,8 @@ much on their own. So the search's real dynamic range is 86.63% → 94.37%, or *
 
 ## Install
 
-Not published to PyPI yet. For the library and the `evonas-search` / `evonas-design`
-CLIs, install straight from GitHub:
+For the library and the `evonas-search` / `evonas-design` CLIs, install straight from
+GitHub:
 
 ```bash
 pip install "git+https://github.com/aishwaryawambule/evo-nas.git"
