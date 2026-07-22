@@ -136,13 +136,49 @@ st.caption(
     "**Coverage** = the fraction of reachable niches filled. MAP-Elites sitting above random "
     "means evolution maps the trade-off space both faster and more completely."
 )
+with st.expander("What exactly differs between the two — and how to read the curves"):
+    st.markdown(
+        "**The comparison is rigged to be fair.** Both methods share the *same* archive, the "
+        "same budget, the same keep-the-better-of-each-niche rule, and the same 5 seeds. The "
+        "**only** difference is how each picks its next candidate:\n\n"
+        "- **Random search** draws a fresh random genome (six random ops) every single evaluation.\n"
+        "- **MAP-Elites** bootstraps with 50 random genomes, then mutates *one edge* of a design "
+        "that already survived in the archive.\n\n"
+        "So the gap between the curves measures exactly one thing: **directed mutation vs blind "
+        "sampling** — nothing else.\n\n"
+        "**Reading the curves:** they overlap at the start (empty niches are easy — even random "
+        "guessing fills them), then separate once the easy niches are gone. MAP-Elites keeps "
+        "climbing because a one-edge mutation of a nearby design often lands in a rare unfilled "
+        "niche; random search stalls because dicing your way into a specific hard niche almost "
+        "never happens. The bands barely overlapping after the split is what makes the win "
+        "*reliable*, not luck."
+    )
 st.pyplot(figures["qd"])
 st.pyplot(figures["coverage"])
 
 st.header("4. How close is it to the true optimum?")
 st.caption(
-    "Because all 15,625 architectures are enumerable, the true Pareto front is known exactly "
-    "(black line) — not estimated. Dots are the archive's elites. The vertical gap between the "
-    "dots and the line is the search's actual suboptimality, measured rather than assumed."
+    "Because all 15,625 architectures are enumerable, the **true Pareto front** — the best "
+    "accuracy achievable at each model size — is known exactly (black line), not estimated. "
+    "Blue dots are MAP-Elites' archive. Where a dot sits *on* the line, the search recovered "
+    "the provably optimal design for that size."
 )
+with st.expander("How to read this plot — dots on, below, and above the line"):
+    st.markdown(
+        "The front is computed over **all 15,625** designs, independently of the search, so it "
+        "is an honest answer key rather than a comparison to another heuristic.\n\n"
+        "- **On the line** — the archive holds the true best design at that size (*quality*).\n"
+        "- **Below the line** — best in its own (size, depth) niche, but another design is smaller "
+        "*and* more accurate, so it is dominated. These are the diversity the archive keeps on "
+        "purpose, not search failures — at each size the vertical stack is several depths, and "
+        "only the top one is Pareto-optimal.\n"
+        "- **The bottom row** (far below, on real CIFAR-10 near 10%) — **depth-0 niches**, cells "
+        "whose output node is disconnected. The network is broken; 10% is a random guess over 10 "
+        "classes. Quality-diversity maps the dead corner too.\n"
+        "- **The line ends at the global optimum** — nothing larger is Pareto-optimal, so dots to "
+        "the right of the line's end are *bigger but not better* (dominated by a smaller design).\n"
+        "- **A few dots edge just above the line** — the front is chosen on *validation* accuracy "
+        "and drawn on *test*; a design with slightly lower val but higher test pokes above. That "
+        "overshoot is the fingerprint of an honest split — nothing was ever selected on the test set."
+    )
 st.pyplot(figures["frontier"])
