@@ -11,6 +11,13 @@ enumerated.
 Runs on a laptop CPU in seconds. No training, no GPU, no PyTorch: every architecture's
 accuracy is a table lookup into the benchmark.
 
+> **The archive's second axis started as conv-op count** — until using the tool showed that
+> was a function of model size, so the map was effectively 1-D and capped at a degenerate 28
+> niches no binning could exceed. It is now **cell depth**, a topological measure independent
+> of size: 40 genuine niches, verified to still recover the true optimum. The before/after is
+> in [Known limitations](#known-limitations); the design note is in
+> [docs/specs](docs/specs/2026-07-21-depth-descriptor.md).
+
 ## Why this exists
 
 A search algorithm is easy to claim and hard to verify. Point one at a real design space
