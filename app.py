@@ -99,15 +99,16 @@ st.markdown(
 )
 _rows, _sel = archive_table(elites, choice["genome"] if choice else None)
 _df = pd.DataFrame(_rows)
+# format for display (params to 3 dp, accuracy to 2) while the underlying
+# values stay numeric so column sorting still works
+_styled = _df.style.format({"params (M)": "{:.3f}", "test acc %": "{:.2f}"})
 if _sel is not None:
-    _styled = _df.style.apply(
+    _styled = _styled.apply(
         lambda row: ["background-color: rgba(255, 75, 75, 0.18)"
                      if row.name == _sel else "" for _ in row],
         axis=1,
     )
-    st.dataframe(_styled, width="stretch", hide_index=True)
-else:
-    st.dataframe(_df, width="stretch", hide_index=True)
+st.dataframe(_styled, width="stretch", hide_index=True)
 st.caption(
     "Sort by any column. Note that the largest design is **not** the best: filling all six "
     "edges with convs leaves no room for the free `skip` to the output that every top design keeps."
